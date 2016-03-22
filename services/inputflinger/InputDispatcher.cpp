@@ -1739,6 +1739,27 @@ bool InputDispatcher::isWindowObscuredLocked(const sp<InputWindowHandle>& window
     return false;
 }
 
+
+bool InputDispatcher::isWindowObscuredLocked(const sp<InputWindowHandle>& windowHandle) const {
+    int32_t displayId = windowHandle->getInfo()->displayId;
+    const InputWindowInfo* windowInfo = windowHandle->getInfo();
+    size_t numWindows = mWindowHandles.size();
+    for (size_t i = 0; i < numWindows; i++) {
+        sp<InputWindowHandle> otherHandle = mWindowHandles.itemAt(i);
+        if (otherHandle == windowHandle) {
+            break;
+        }
+
+        const InputWindowInfo* otherInfo = otherHandle->getInfo();
+        if (otherInfo->displayId == displayId
+                && otherInfo->visible && !otherInfo->isTrustedOverlay()
+                && otherInfo->overlaps(windowInfo)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 String8 InputDispatcher::checkWindowReadyForMoreInputLocked(nsecs_t currentTime,
         const sp<InputWindowHandle>& windowHandle, const EventEntry* eventEntry,
         const char* targetType) {
